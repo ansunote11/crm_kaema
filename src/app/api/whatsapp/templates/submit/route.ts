@@ -160,6 +160,12 @@ export async function POST(request: Request) {
           { status: 400 },
         )
       }
+      if (!supportsTemplates(config)) {
+        return NextResponse.json(
+          { error: t('common.providerNotSupported'), code: 'provider_not_supported' },
+          { status: 400 },
+        )
+      }
       if (!config.waba_id) {
         return NextResponse.json(
           {
@@ -170,12 +176,6 @@ export async function POST(request: Request) {
         )
       }
 
-      if (!supportsTemplates(config)) {
-        return NextResponse.json(
-          { error: t('common.providerNotSupported'), code: 'provider_not_supported' },
-          { status: 400 },
-        )
-      }
       const accessToken = decrypt(config.access_token)
 
       // Media headers (image/video/document) need a Resumable-Upload

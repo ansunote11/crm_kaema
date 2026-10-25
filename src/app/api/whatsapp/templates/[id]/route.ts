@@ -276,6 +276,12 @@ export async function DELETE(
         .select('*')
         .eq('account_id', accountId)
         .single()
+      if (config && !supportsTemplates(config)) {
+        return NextResponse.json(
+          { error: t('common.providerNotSupported'), code: 'provider_not_supported' },
+          { status: 400 },
+        )
+      }
       if (configError || !config || !config.waba_id) {
         return NextResponse.json(
           { error: t('templates.notConfiguredDelete') },
