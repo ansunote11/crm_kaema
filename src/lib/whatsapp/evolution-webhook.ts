@@ -29,6 +29,7 @@ import {
   type EvolutionMessageData,
 } from '@/lib/whatsapp/evolution-inbound'
 import { applyMessageStatus } from '@/lib/whatsapp/message-status-sync'
+import { applyBroadcastRecipientStatus } from '@/lib/whatsapp/broadcast-recipient-webhook'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { decrypt } from '@/lib/whatsapp/encryption'
 
@@ -121,6 +122,14 @@ async function handleMessagesUpdate(
       failure: null,
       statusAt: null,
     })
+    // Free-text campaigns: mirror delivered / read onto the recipient row
+    // (the aggregate trigger then advances the campaign's counters).
+    await applyBroadcastRecipientStatus(db, {
+      whatsappMessageId: update.messageId,
+      status: update.status,
+      occurredAt: new Date().toISOString(),
+      failure: null,
+    }).catch((err) => console.error('[evolution] recipient status mirror failed:', err))
     for (const a of advanced) {
       await dispatchWebhookEvent(db, config.account_id, 'message.status_updated', {
         whatsapp_message_id: update.messageId,

@@ -902,7 +902,8 @@
       "delivered": "Entregado",
       "read": "Leído",
       "replied": "Respondido",
-      "unknown": "Desconocido"
+      "unknown": "Desconocido",
+      "paused": "Pausada"
     },
     "detail": {
       "backToBroadcasts": "Volver a difusiones",
@@ -2245,7 +2246,8 @@
       "textPlaceholder": "El texto del mensaje que se insertará",
       "cancel": "Cancelar",
       "save": "Guardar"
-    }
+    },
+    "templatesEvolutionNote": "Las plantillas de mensaje solo existen en la Meta Cloud API. Esta cuenta usa Evolution."
   },
   "SignupPage": {
     "passwordsMismatch": "Las contraseñas no coinciden",
@@ -2947,6 +2949,57 @@
       "submitFailed": "Error al enviar la plantilla.",
       "metaApiStatus": "Error de la API de Meta: {status}",
       "syncFailed": "Error al sincronizar las plantillas"
+    }
+  },
+  "EvolutionBroadcast": {
+    "title": "Nueva campaña (Evolution)",
+    "subtitle": "Texto libre, enlace e imagen opcionales, enviados uno a uno a ritmo humano.",
+    "steps": {
+      "message": "Mensaje",
+      "audience": "Audiencia",
+      "send": "Ritmo y envío"
+    },
+    "name": "Nombre de la campaña",
+    "namePlaceholder": "p. ej.: Promoción de octubre",
+    "text": "Mensaje",
+    "textPlaceholder": "Hola '{{'nombre'}}', ¡mira nuestra nueva oferta!",
+    "textHint": "Usa '{{'nombre'}}' para insertar el primer nombre del contacto.",
+    "link": "Enlace (opcional)",
+    "image": "Imagen (opcional)",
+    "imageUpload": "Subir imagen",
+    "imageUploading": "Subiendo...",
+    "imageRemove": "Quitar imagen",
+    "imageUrlPlaceholder": "o pega la URL de una imagen",
+    "imageOnly": "Elige un archivo de imagen.",
+    "imageTooLarge": "La imagen supera los 5 MB.",
+    "imageUploadFailed": "Falló la subida de la imagen.",
+    "preview": "Vista previa",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "riskNote": "Los mensajes masivos por la conexión no oficial de WhatsApp pueden hacer que bloqueen el número. Envía solo a quienes aceptaron recibirlos y mantén un ritmo lento.",
+    "pacingTitle": "Ritmo de envío",
+    "pacingHint": "Cada mensaje espera un tiempo aleatorio entre el mínimo y el máximo. Los límites por minuto y por hora cuentan todas las campañas de la cuenta. La campaña se pausa sola si los envíos empiezan a fallar.",
+    "minDelay": "Intervalo mínimo entre mensajes (segundos)",
+    "maxDelay": "Intervalo máximo entre mensajes (segundos)",
+    "perMinute": "Mensajes por minuto (máximo)",
+    "perHour": "Mensajes por hora (máximo)",
+    "maxFailures": "Pausar tras cuántos fallos seguidos",
+    "summaryRecipients": "{count} destinatarios",
+    "summaryEstimate": "Duración estimada: unos {minutes} min",
+    "start": "Iniciar campaña",
+    "starting": "Iniciando...",
+    "started": "Campaña iniciada con {count} destinatarios.",
+    "startFailed": "No se pudo iniciar la campaña.",
+    "panel": {
+      "title": "Envío con ritmo controlado",
+      "limits": "{perMinute}/min, {perHour}/hora, {min}-{max}s entre mensajes",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "retryFailed": "Reintentar {count} fallidos",
+      "pausedManual": "Pausada. Reanuda cuando quieras.",
+      "pausedAuto": "Pausada automáticamente: {reason}",
+      "nextIn": "Próximo mensaje en {seconds}s",
+      "actionFailed": "No se pudo completar la acción."
     }
   }
 }

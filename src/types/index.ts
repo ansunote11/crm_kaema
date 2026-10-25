@@ -420,7 +420,13 @@ export interface Deal {
   assignee?: Profile;
 }
 
-export type BroadcastStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
+export type BroadcastStatus =
+  | 'draft'
+  | 'scheduled'
+  | 'sending'
+  | 'paused'
+  | 'sent'
+  | 'failed';
 export type RecipientStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'replied' | 'failed';
 
 export interface Broadcast {
@@ -445,6 +451,23 @@ export interface Broadcast {
    * send. Added in migration 038.
    */
   delivery_locked_at?: string | null;
+  /** 'template' (Meta) or 'evolution_text' (free-text, paced). Migration 061. */
+  channel?: 'template' | 'evolution_text';
+  message_text?: string | null;
+  message_link?: string | null;
+  message_image_url?: string | null;
+  /** Pacing limits of a free-text campaign. */
+  pacing?: {
+    min_delay_seconds: number;
+    max_delay_seconds: number;
+    per_minute: number;
+    per_hour: number;
+    max_consecutive_failures: number;
+  } | null;
+  next_send_at?: string | null;
+  /** Why the campaign is paused: 'manual' or the failure that tripped it. */
+  pause_reason?: string | null;
+  consecutive_failures?: number;
   created_at: string;
 }
 

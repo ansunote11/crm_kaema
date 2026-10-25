@@ -26,10 +26,13 @@ export function SettingsRail({
   active,
   onSelect,
   hints,
+  hidden,
 }: {
   active: SettingsSection;
   onSelect: (section: SettingsSection) => void;
   hints?: Partial<Record<SettingsSection, ReactNode>>;
+  /** Sections to leave out of the rail (e.g. templates on Evolution). */
+  hidden?: readonly SettingsSection[];
 }) {
   const t = useTranslations('Settings');
   const activeRef = useRef<HTMLButtonElement>(null);
@@ -57,7 +60,7 @@ export function SettingsRail({
     >
       {RAIL_GROUPS.map(({ label, group }) => {
         const items = SETTINGS_SECTIONS.filter(
-          (s) => SECTION_META[s].group === group,
+          (s) => SECTION_META[s].group === group && !hidden?.includes(s),
         );
         return (
           <div

@@ -13,6 +13,8 @@ import { Step4ScheduleSend } from '@/components/broadcasts/step4-schedule-send';
 import { useBroadcastSending } from '@/hooks/use-broadcast-sending';
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useWhatsAppProvider } from '@/hooks/use-whatsapp-provider';
+import { EvolutionBroadcastWizard } from '@/components/broadcasts/evolution-broadcast-wizard';
 
 const steps = [
   { label: 'template', key: 'template' },
@@ -22,6 +24,14 @@ const steps = [
 ] as const;
 
 export default function NewBroadcastPage() {
+  // Evolution has no templates: it gets its own free-text, paced flow.
+  const { provider, loading } = useWhatsAppProvider();
+  if (loading) return null;
+  if (provider === 'evolution') return <EvolutionBroadcastWizard />;
+  return <TemplateBroadcastPage />;
+}
+
+function TemplateBroadcastPage() {
   const router = useRouter();
   const t = useTranslations('Broadcasts.new');
   const { accountId } = useAuth();

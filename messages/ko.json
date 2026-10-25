@@ -902,7 +902,8 @@
       "delivered": "전달됨",
       "read": "읽음",
       "replied": "응답함",
-      "unknown": "알 수 없음"
+      "unknown": "알 수 없음",
+      "paused": "일시 중지됨"
     },
     "detail": {
       "backToBroadcasts": "브로드캐스트로 돌아가기",
@@ -2245,7 +2246,8 @@
       "textPlaceholder": "삽입할 메시지 텍스트",
       "cancel": "취소",
       "save": "저장"
-    }
+    },
+    "templatesEvolutionNote": "메시지 템플릿은 Meta Cloud API에서만 사용할 수 있습니다. 이 계정은 Evolution을 사용합니다."
   },
   "SignupPage": {
     "passwordsMismatch": "비밀번호가 일치하지 않습니다",
@@ -2947,6 +2949,57 @@
       "submitFailed": "템플릿을 제출하지 못했습니다.",
       "metaApiStatus": "Meta API 오류: {status}",
       "syncFailed": "템플릿을 동기화하지 못했습니다"
+    }
+  },
+  "EvolutionBroadcast": {
+    "title": "새 캠페인 (Evolution)",
+    "subtitle": "자유 텍스트와 선택적 링크·이미지를 사람 속도로 한 명씩 보냅니다.",
+    "steps": {
+      "message": "메시지",
+      "audience": "대상",
+      "send": "속도 및 발송"
+    },
+    "name": "캠페인 이름",
+    "namePlaceholder": "예: 10월 프로모션",
+    "text": "메시지",
+    "textPlaceholder": "안녕하세요 '{{'name'}}'님, 새로운 혜택을 확인해 보세요!",
+    "textHint": "'{{'name'}}'을 쓰면 연락처의 이름이 들어갑니다.",
+    "link": "링크 (선택)",
+    "image": "이미지 (선택)",
+    "imageUpload": "이미지 업로드",
+    "imageUploading": "업로드 중...",
+    "imageRemove": "이미지 제거",
+    "imageUrlPlaceholder": "또는 이미지 URL 붙여넣기",
+    "imageOnly": "이미지 파일을 선택하세요.",
+    "imageTooLarge": "이미지가 5MB를 초과합니다.",
+    "imageUploadFailed": "이미지 업로드에 실패했습니다.",
+    "preview": "미리보기",
+    "next": "다음",
+    "back": "뒤로",
+    "riskNote": "비공식 WhatsApp 연결로 대량 발송하면 번호가 차단될 수 있습니다. 수신에 동의한 사람에게만 보내고 속도를 낮게 유지하세요.",
+    "pacingTitle": "발송 속도",
+    "pacingHint": "각 메시지는 최소와 최대 사이의 무작위 시간만큼 기다립니다. 분당·시간당 한도는 계정의 모든 캠페인에 적용됩니다. 발송이 실패하기 시작하면 캠페인이 스스로 일시 중지됩니다.",
+    "minDelay": "메시지 간 최소 간격 (초)",
+    "maxDelay": "메시지 간 최대 간격 (초)",
+    "perMinute": "분당 메시지 (최대)",
+    "perHour": "시간당 메시지 (최대)",
+    "maxFailures": "연속 실패 몇 번에 일시 중지",
+    "summaryRecipients": "수신자 {count}명",
+    "summaryEstimate": "예상 소요 시간: 약 {minutes}분",
+    "start": "캠페인 시작",
+    "starting": "시작하는 중...",
+    "started": "수신자 {count}명으로 캠페인이 시작되었습니다.",
+    "startFailed": "캠페인을 시작할 수 없습니다.",
+    "panel": {
+      "title": "속도 조절 발송",
+      "limits": "분당 {perMinute}, 시간당 {perHour}, 메시지 간 {min}-{max}초",
+      "pause": "일시 중지",
+      "resume": "재개",
+      "retryFailed": "실패 {count}건 재시도",
+      "pausedManual": "일시 중지됨. 준비되면 재개하세요.",
+      "pausedAuto": "자동으로 일시 중지됨: {reason}",
+      "nextIn": "다음 메시지까지 {seconds}초",
+      "actionFailed": "작업을 완료할 수 없습니다."
     }
   }
 }

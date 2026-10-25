@@ -902,7 +902,8 @@
       "delivered": "Entregue",
       "read": "Lida",
       "replied": "Respondida",
-      "unknown": "Desconhecido"
+      "unknown": "Desconhecido",
+      "paused": "Pausada"
     },
     "detail": {
       "backToBroadcasts": "Voltar aos disparos",
@@ -2245,7 +2246,8 @@
       "textPlaceholder": "O texto da mensagem a inserir",
       "cancel": "Cancelar",
       "save": "Salvar"
-    }
+    },
+    "templatesEvolutionNote": "Os modelos de mensagem só existem na Meta Cloud API. Esta conta usa a Evolution."
   },
   "SignupPage": {
     "passwordsMismatch": "As senhas não coincidem",
@@ -2947,6 +2949,57 @@
       "submitFailed": "Falha ao enviar o modelo.",
       "metaApiStatus": "Erro da API da Meta: {status}",
       "syncFailed": "Falha ao sincronizar os modelos"
+    }
+  },
+  "EvolutionBroadcast": {
+    "title": "Nova campanha (Evolution)",
+    "subtitle": "Texto livre, link e imagem opcionais, enviados um a um em ritmo humano.",
+    "steps": {
+      "message": "Mensagem",
+      "audience": "Público",
+      "send": "Ritmo e envio"
+    },
+    "name": "Nome da campanha",
+    "namePlaceholder": "ex.: Promoção de outubro",
+    "text": "Mensagem",
+    "textPlaceholder": "Olá '{{'nome'}}', veja nossa nova oferta!",
+    "textHint": "Use '{{'nome'}}' para inserir o primeiro nome do contato.",
+    "link": "Link (opcional)",
+    "image": "Imagem (opcional)",
+    "imageUpload": "Enviar imagem",
+    "imageUploading": "Enviando...",
+    "imageRemove": "Remover imagem",
+    "imageUrlPlaceholder": "ou cole o endereço de uma imagem",
+    "imageOnly": "Escolha um arquivo de imagem.",
+    "imageTooLarge": "A imagem tem mais de 5 MB.",
+    "imageUploadFailed": "Falha ao enviar a imagem.",
+    "preview": "Pré-visualização",
+    "next": "Avançar",
+    "back": "Voltar",
+    "riskNote": "Mensagens em massa pela conexão não oficial do WhatsApp podem causar o banimento do número. Envie só para quem aceitou receber e mantenha o ritmo lento.",
+    "pacingTitle": "Ritmo de envio",
+    "pacingHint": "Cada mensagem espera um tempo aleatório entre o mínimo e o máximo. Os limites por minuto e por hora valem para todas as campanhas da conta. A campanha pausa sozinha se os envios começarem a falhar.",
+    "minDelay": "Intervalo mínimo entre mensagens (segundos)",
+    "maxDelay": "Intervalo máximo entre mensagens (segundos)",
+    "perMinute": "Mensagens por minuto (máximo)",
+    "perHour": "Mensagens por hora (máximo)",
+    "maxFailures": "Pausar após quantas falhas seguidas",
+    "summaryRecipients": "{count} destinatários",
+    "summaryEstimate": "Duração estimada: cerca de {minutes} min",
+    "start": "Iniciar campanha",
+    "starting": "Iniciando...",
+    "started": "Campanha iniciada com {count} destinatários.",
+    "startFailed": "Não foi possível iniciar a campanha.",
+    "panel": {
+      "title": "Envio com ritmo controlado",
+      "limits": "{perMinute}/min, {perHour}/hora, {min}-{max}s entre mensagens",
+      "pause": "Pausar",
+      "resume": "Retomar",
+      "retryFailed": "Tentar {count} falhas de novo",
+      "pausedManual": "Pausada. Retome quando quiser.",
+      "pausedAuto": "Pausada automaticamente: {reason}",
+      "nextIn": "Próxima mensagem em {seconds}s",
+      "actionFailed": "Não foi possível concluir a ação."
     }
   }
 }

@@ -902,7 +902,8 @@
       "delivered": "Delivered",
       "read": "Read",
       "replied": "Replied",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "paused": "Paused"
     },
     "detail": {
       "backToBroadcasts": "Back to Broadcasts",
@@ -2245,7 +2246,8 @@
       "textPlaceholder": "The message text to insert",
       "cancel": "Cancel",
       "save": "Save"
-    }
+    },
+    "templatesEvolutionNote": "Message templates are only available with the Meta Cloud API. This account uses Evolution."
   },
   "SignupPage": {
     "passwordsMismatch": "Passwords do not match",
@@ -2947,6 +2949,57 @@
       "submitFailed": "Failed to submit template.",
       "metaApiStatus": "Meta API error: {status}",
       "syncFailed": "Failed to sync templates"
+    }
+  },
+  "EvolutionBroadcast": {
+    "title": "New campaign (Evolution)",
+    "subtitle": "Free text, an optional link and image, sent one by one at a human pace.",
+    "steps": {
+      "message": "Message",
+      "audience": "Audience",
+      "send": "Pacing and send"
+    },
+    "name": "Campaign name",
+    "namePlaceholder": "e.g. October promotion",
+    "text": "Message",
+    "textPlaceholder": "Hi '{{'name'}}', check out our new offer!",
+    "textHint": "Use '{{'name'}}' to insert the contact's first name.",
+    "link": "Link (optional)",
+    "image": "Image (optional)",
+    "imageUpload": "Upload image",
+    "imageUploading": "Uploading...",
+    "imageRemove": "Remove image",
+    "imageUrlPlaceholder": "or paste an image URL",
+    "imageOnly": "Choose an image file.",
+    "imageTooLarge": "The image is larger than 5 MB.",
+    "imageUploadFailed": "Image upload failed.",
+    "preview": "Preview",
+    "next": "Next",
+    "back": "Back",
+    "riskNote": "Bulk messages over the unofficial WhatsApp connection can get the number banned. Send only to people who agreed to receive them, and keep the pace slow.",
+    "pacingTitle": "Pacing",
+    "pacingHint": "Each message waits a random time between the minimum and maximum. The per-minute and per-hour limits count every campaign of the account. The campaign pauses itself if sends start failing.",
+    "minDelay": "Minimum delay between messages (seconds)",
+    "maxDelay": "Maximum delay between messages (seconds)",
+    "perMinute": "Messages per minute (max)",
+    "perHour": "Messages per hour (max)",
+    "maxFailures": "Pause after this many failures in a row",
+    "summaryRecipients": "{count} recipients",
+    "summaryEstimate": "Estimated duration: about {minutes} min",
+    "start": "Start campaign",
+    "starting": "Starting...",
+    "started": "Campaign started with {count} recipients.",
+    "startFailed": "Could not start the campaign.",
+    "panel": {
+      "title": "Paced sending",
+      "limits": "{perMinute}/min, {perHour}/hour, {min}-{max}s between messages",
+      "pause": "Pause",
+      "resume": "Resume",
+      "retryFailed": "Retry {count} failed",
+      "pausedManual": "Paused. Resume when you are ready.",
+      "pausedAuto": "Paused automatically: {reason}",
+      "nextIn": "Next message in {seconds}s",
+      "actionFailed": "Could not complete the action."
     }
   }
 }

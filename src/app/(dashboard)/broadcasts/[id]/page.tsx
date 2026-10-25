@@ -36,6 +36,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { EvolutionCampaignPanel } from '@/components/broadcasts/evolution-campaign-panel';
 import {
   getBroadcastStatus,
   getRecipientStatus,
@@ -325,7 +326,10 @@ export default function BroadcastDetailPage() {
   // A campaign whose tab went away sits in 'sending' with recipients
   // still pending and nothing left to move them. Name that state rather
   // than leaving a permanently pulsing "sending" badge.
-  const isStalled = broadcast.status === 'sending' && pendingCount > 0;
+  const isEvolutionCampaign = broadcast.channel === 'evolution_text';
+  // Free-text campaigns are driven by the paced sender, never "stalled".
+  const isStalled =
+    !isEvolutionCampaign && broadcast.status === 'sending' && pendingCount > 0;
 
   const funnelSteps: FunnelStep[] = [
     { label: t('stats.sent'), value: broadcast.sent_count, color: 'bg-primary' },
@@ -357,8 +361,12 @@ export default function BroadcastDetailPage() {
               </span>
             </div>
             <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
-              <span>{t('template', { name: broadcast.template_name })}</span>
-              <span>-</span>
+              {!isEvolutionCampaign && (
+                <>
+                  <span>{t('template', { name: broadcast.template_name })}</span>
+                  <span>-</span>
+                </>
+              )}
               <span>
                 {t('createdAt', { date: new Date(broadcast.created_at).toLocaleDateString() })}
               </span>
@@ -410,9 +418,18 @@ export default function BroadcastDetailPage() {
         )}
       </div>
 
+      {isEvolutionCampaign && (
+        <EvolutionCampaignPanel
+          broadcast={broadcast}
+          failedCount={retryableCount}
+          onChanged={fetchData}
+        />
+      )}
+
       {/* Resume / retry (issue #472). Only rendered when there is
-          actually something outstanding. */}
-      {(pendingCount > 0 || retryableCount > 0) && (
+          actually something outstanding. Free-text (Evolution) campaigns
+          have their own panel above. */}
+      {!isEvolutionCampaign && (pendingCount > 0 || retryableCount > 0) && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
           <div className="text-sm">
             <p className="font-medium text-foreground">
