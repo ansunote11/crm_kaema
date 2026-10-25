@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { SettingsPanelHead } from './settings-panel-head';
+import { EvolutionConfigPanel } from './evolution-config';
 import {
   Accordion,
   AccordionItem,
@@ -82,6 +83,9 @@ export function WhatsAppConfig() {
   const [resetting, setResetting] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [config, setConfig] = useState<WhatsAppConfigType | null>(null);
+  // Which provider's form is shown. Seeded from the saved row; the user
+  // can flip it to switch (saving the other provider replaces the row).
+  const [provider, setProvider] = useState<'meta' | 'evolution'>('meta');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('unknown');
   const [resetReason, setResetReason] = useState<ResetReason>(null);
   const [statusMessage, setStatusMessage] = useState<string>('');
@@ -161,6 +165,7 @@ export function WhatsAppConfig() {
 
       if (data) {
         setConfig(data);
+        setProvider(data.provider === 'evolution' ? 'evolution' : 'meta');
         setPhoneNumberId(data.phone_number_id || '');
         setWabaId(data.waba_id || '');
         setAccessToken(MASKED_TOKEN);
@@ -539,6 +544,50 @@ export function WhatsAppConfig() {
     </div>
   );
 
+  const providerSwitch = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-foreground">{t('providerLabel')}</CardTitle>
+        <CardDescription className="text-muted-foreground">
+          {t('providerHint')}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap gap-3">
+        {(['meta', 'evolution'] as const).map((p) => (
+          <Button
+            key={p}
+            type="button"
+            variant={provider === p ? 'default' : 'outline'}
+            disabled={!canEditSettings}
+            onClick={() => setProvider(p)}
+            aria-pressed={provider === p}
+          >
+            {p === 'meta' ? t('providerMeta') : t('providerEvolution')}
+          </Button>
+        ))}
+      </CardContent>
+    </Card>
+  );
+
+  // Evolution accounts get their own form; everything below is Meta-only.
+  if (provider === 'evolution') {
+    return (
+      <section className="animate-in fade-in-50 duration-200">
+        <SettingsPanelHead title={t("title")} description={t("description")} />
+        <div className="max-w-2xl space-y-6">
+          {providerSwitch}
+          <EvolutionConfigPanel
+            config={config}
+            canEdit={canEditSettings}
+            onChanged={() => {
+              if (accountId) fetchConfig(accountId);
+            }}
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="animate-in fade-in-50 duration-200">
       <SettingsPanelHead
@@ -548,6 +597,7 @@ export function WhatsAppConfig() {
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       {/* Main config form */}
       <div className="space-y-6">
+        {providerSwitch}
         {/* Corrupted-token reset banner */}
         {showResetBanner && (
           <Alert className="bg-amber-950/40 border-amber-600/40">

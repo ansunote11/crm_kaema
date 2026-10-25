@@ -30,6 +30,17 @@ import { encrypt, decrypt } from '@/lib/whatsapp/encryption'
 import { resolveVerifyTokenForSave } from '@/lib/whatsapp/verify-token'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { getT } from '@/lib/i18n/translate'
+import { configProvider, evolutionCredsFromConfig } from '@/lib/whatsapp/provider'
+import { getConnectionState } from '@/lib/whatsapp/evolution-api'
+import {
+  EVOLUTION_COLUMNS_CLEARED,
+  META_COLUMNS_CLEARED,
+  clearEvolutionWebhook,
+  registerEvolutionWebhook,
+  resolvePublicOrigin,
+  validateInstanceName,
+  validateServerUrl,
+} from '@/lib/whatsapp/evolution-config'
 
 const t = getT('Api')
 
@@ -133,7 +144,9 @@ export async function GET() {
 
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, waba_id, access_token, status')
+      .select(
+        'provider, phone_number_id, waba_id, access_token, status, evolution_server_url, evolution_instance, evolution_api_key, evolution_webhook_set_at'
+      )
       .eq('account_id', accountId)
       .maybeSingle()
 
@@ -154,6 +167,49 @@ export async function GET() {
         },
         { status: 200 }
       )
+    }
+
+    // Evolution accounts: check the instance link instead of Meta.
+    if (configProvider(config) === 'evolution') {
+      let creds
+      try {
+        creds = evolutionCredsFromConfig(config)
+      } catch (err) {
+        console.error('[whatsapp/config GET] Evolution key decryption failed:', err)
+        return NextResponse.json(
+          {
+            connected: false,
+            provider: 'evolution',
+            reason: 'token_corrupted',
+            needs_reset: true,
+            message: t('whatsappConfig.tokenCorrupted'),
+          },
+          { status: 200 }
+        )
+      }
+      try {
+        const state = await getConnectionState(creds)
+        return NextResponse.json({
+          connected: state === 'open',
+          provider: 'evolution',
+          connection_state: state,
+          instance: creds.instance,
+          webhook_registered: config.evolution_webhook_set_at != null,
+          ...(state === 'open'
+            ? {}
+            : { reason: 'evolution_not_connected', message: state }),
+        })
+      } catch (err) {
+        return NextResponse.json(
+          {
+            connected: false,
+            provider: 'evolution',
+            reason: 'evolution_api_error',
+            message: err instanceof Error ? err.message : String(err),
+          },
+          { status: 200 }
+        )
+      }
     }
 
     // Try to decrypt the stored token with the current ENCRYPTION_KEY.
@@ -263,6 +319,11 @@ export async function POST(request: Request) {
     if (!limit.success) return rateLimitResponse(limit)
 
     const body = await request.json()
+
+    if (body?.provider === 'evolution') {
+      return await saveEvolutionConfig({ supabase, accountId, userId, body, request })
+    }
+
     const { phone_number_id, waba_id, access_token, verify_token, pin } = body
 
     if (!access_token || !phone_number_id) {
@@ -497,6 +558,10 @@ export async function POST(request: Request) {
     // store the credentials and the error so the UI can guide the
     // user through a retry.
     const baseRow = {
+      provider: 'meta' as const,
+      // Switching providers: drop the other provider's columns so stale
+      // rows can't confuse reset/debugging.
+      ...EVOLUTION_COLUMNS_CLEARED,
       phone_number_id,
       waba_id: waba_id || null,
       access_token: encryptedAccessToken,
@@ -590,6 +655,20 @@ export async function DELETE() {
   try {
     const { supabase, accountId } = await requireRole('admin')
 
+    // Evolution: stop the instance posting to us before dropping the row.
+    const { data: existingRow } = await supabase
+      .from('whatsapp_config')
+      .select('provider, evolution_server_url, evolution_instance, evolution_api_key')
+      .eq('account_id', accountId)
+      .maybeSingle()
+    if (existingRow && configProvider(existingRow) === 'evolution') {
+      try {
+        await clearEvolutionWebhook(evolutionCredsFromConfig(existingRow))
+      } catch {
+        // Undecryptable key etc. — nothing to call; proceed with the delete.
+      }
+    }
+
     const { error: deleteError } = await supabase
       .from('whatsapp_config')
       .delete()
@@ -611,4 +690,153 @@ export async function DELETE() {
     console.error('Error in WhatsApp config DELETE:', error)
     return NextResponse.json({ error: t('common.internalServerError') }, { status: 500 })
   }
+}
+
+/**
+ * Evolution branch of POST /api/whatsapp/config.
+ *
+ * Validates the input, rejects an instance another account already
+ * claimed, VERIFIES the credentials against the instance (auth/404 reject
+ * the save; an instance that is reachable but not yet `open` is saved so
+ * the user can pair by QR afterwards), registers a freshly-tokened
+ * webhook, and persists only the token HASH plus the encrypted apikey.
+ * A webhook-registration failure is stored as `last_registration_error`
+ * and does NOT block the save.
+ */
+async function saveEvolutionConfig({
+  supabase,
+  accountId,
+  userId,
+  body,
+  request,
+}: {
+  supabase: Awaited<ReturnType<typeof createClient>>
+  accountId: string
+  userId: string
+  body: Record<string, unknown>
+  request: Request
+}) {
+  const url = validateServerUrl(body.evolution_server_url)
+  if (!url.ok) {
+    return NextResponse.json({ error: url.error, field: 'evolution_server_url' }, { status: 400 })
+  }
+  const instance = validateInstanceName(body.evolution_instance)
+  if (!instance.ok) {
+    return NextResponse.json({ error: instance.error, field: 'evolution_instance' }, { status: 400 })
+  }
+
+  const { data: existing } = await supabase
+    .from('whatsapp_config')
+    .select('id, provider, evolution_api_key')
+    .eq('account_id', accountId)
+    .maybeSingle()
+
+  // The form never shows the stored key, so a blank field keeps it.
+  let apiKey =
+    typeof body.evolution_api_key === 'string' ? body.evolution_api_key.trim() : ''
+  if (!apiKey && existing && configProvider(existing) === 'evolution' && existing.evolution_api_key) {
+    try {
+      apiKey = decrypt(existing.evolution_api_key)
+    } catch {
+      apiKey = ''
+    }
+  }
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: 'evolution_api_key is required', field: 'evolution_api_key' },
+      { status: 400 }
+    )
+  }
+
+  // Single-tenant per instance: a shared instance would leak
+  // conversations across accounts.
+  const { data: claimed, error: claimedError } = await supabaseAdmin()
+    .from('whatsapp_config')
+    .select('account_id')
+    .eq('provider', 'evolution')
+    .eq('evolution_server_url', url.url)
+    .eq('evolution_instance', instance.name)
+    .neq('account_id', accountId)
+    .maybeSingle()
+  if (claimedError) {
+    console.error('Error checking Evolution instance ownership:', claimedError)
+    return NextResponse.json({ error: t('whatsappConfig.validateFailed') }, { status: 500 })
+  }
+  if (claimed) {
+    return NextResponse.json(
+      { error: 'This Evolution instance is already linked to another account.' },
+      { status: 409 }
+    )
+  }
+
+  const creds = { serverUrl: url.url, instance: instance.name, apiKey }
+
+  // Verify before saving.
+  let state: Awaited<ReturnType<typeof getConnectionState>>
+  try {
+    state = await getConnectionState(creds)
+  } catch (err) {
+    const status = (err as { status?: number }).status
+    const message = err instanceof Error ? err.message : 'Evolution API unreachable'
+    console.error('[whatsapp/config] Evolution verify failed:', message)
+    return NextResponse.json(
+      { error: `Could not verify the Evolution instance: ${message}` },
+      { status: status === 401 || status === 403 || status === 404 ? 400 : 502 }
+    )
+  }
+
+  let encryptedKey: string
+  try {
+    encryptedKey = encrypt(apiKey)
+  } catch (err) {
+    console.error('Encryption failed:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: t('whatsappConfig.encryptFailed') }, { status: 500 })
+  }
+
+  const registration = await registerEvolutionWebhook(
+    creds,
+    resolvePublicOrigin(request.headers, request.url)
+  )
+
+  const connected = state === 'open'
+  const row = {
+    provider: 'evolution' as const,
+    // Switching providers: drop the Meta columns.
+    ...META_COLUMNS_CLEARED,
+    evolution_server_url: url.url,
+    evolution_instance: instance.name,
+    evolution_api_key: encryptedKey,
+    // Only the HASH is persisted; the plaintext token is never shown again.
+    evolution_webhook_token_hash: registration.tokenHash,
+    evolution_webhook_set_at: registration.setAt,
+    status: connected ? 'connected' : 'disconnected',
+    connected_at: connected ? new Date().toISOString() : null,
+    last_registration_error: registration.error,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (existing) {
+    const { error } = await supabase.from('whatsapp_config').update(row).eq('account_id', accountId)
+    if (error) {
+      console.error('Error updating whatsapp_config (evolution):', error)
+      return NextResponse.json({ error: t('whatsappConfig.updateFailed') }, { status: 500 })
+    }
+  } else {
+    const { error } = await supabase
+      .from('whatsapp_config')
+      .insert({ account_id: accountId, user_id: userId, ...row })
+    if (error) {
+      console.error('Error inserting whatsapp_config (evolution):', error)
+      return NextResponse.json({ error: t('whatsappConfig.saveFailed') }, { status: 500 })
+    }
+  }
+
+  return NextResponse.json({
+    success: true,
+    saved: true,
+    provider: 'evolution',
+    connection_state: state,
+    webhook_registered: registration.setAt != null,
+    webhook_error: registration.error,
+  })
 }

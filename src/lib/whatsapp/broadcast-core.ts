@@ -20,6 +20,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { sendTemplateMessage } from '@/lib/whatsapp/meta-api';
 import { decrypt } from '@/lib/whatsapp/encryption';
+import { supportsBroadcasts } from '@/lib/whatsapp/provider';
 import {
   parseInternationalPhone,
   phoneVariants,
@@ -118,6 +119,13 @@ export async function createBroadcast(
     throw new BroadcastError(
       'whatsapp_not_configured',
       'WhatsApp not configured. Please set up your WhatsApp integration first.',
+      400
+    );
+  }
+  if (!supportsBroadcasts(config)) {
+    throw new BroadcastError(
+      'provider_not_supported',
+      'Broadcasts are not supported by the Evolution provider',
       400
     );
   }

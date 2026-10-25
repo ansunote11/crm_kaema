@@ -297,6 +297,13 @@ export interface MessageReaction {
 export interface WhatsAppConfig {
   id: string;
   user_id: string;
+  /** Which backend sends/receives for this account. Migration 060. */
+  provider?: 'meta' | 'evolution';
+  /** Evolution API origin. Set only when `provider === 'evolution'`. */
+  evolution_server_url?: string | null;
+  evolution_instance?: string | null;
+  /** NULL until the webhook is registered with the instance. */
+  evolution_webhook_set_at?: string | null;
   phone_number_id: string;
   waba_id?: string;
   access_token: string;

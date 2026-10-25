@@ -7,6 +7,7 @@ import {
   toErrorResponse,
 } from '@/lib/auth/account'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { supportsTemplates } from '@/lib/whatsapp/provider'
 import { submitMessageTemplate } from '@/lib/whatsapp/meta-api'
 import {
   validateTemplatePayload,
@@ -169,6 +170,12 @@ export async function POST(request: Request) {
         )
       }
 
+      if (!supportsTemplates(config)) {
+        return NextResponse.json(
+          { error: t('common.providerNotSupported'), code: 'provider_not_supported' },
+          { status: 400 },
+        )
+      }
       const accessToken = decrypt(config.access_token)
 
       // Media headers (image/video/document) need a Resumable-Upload

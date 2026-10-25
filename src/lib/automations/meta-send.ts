@@ -1,4 +1,9 @@
-import { sendTextMessage, sendTemplateMessage } from '@/lib/whatsapp/meta-api'
+import { sendTemplateMessage } from '@/lib/whatsapp/meta-api'
+import {
+  configProvider,
+  resolveSendProvider,
+  supportsTemplates,
+} from '@/lib/whatsapp/provider'
 import type { InteractiveMessagePayload } from '@/lib/whatsapp/interactive'
 import {
   engineSendInteractiveButtons,
@@ -157,7 +162,13 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
     throw new Error(t('send.notConfigured'))
   }
 
-  const accessToken = decrypt(config.access_token)
+  // Templates are Meta-only; Evolution accounts can only send text here.
+  if (input.kind === 'template' && !supportsTemplates(config)) {
+    throw new Error(t('send.templatesNotSupported'))
+  }
+  const isMeta = configProvider(config) === 'meta'
+  const accessToken = isMeta ? decrypt(config.access_token) : ''
+  const provider = resolveSendProvider(config)
 
   // Local template row. A missing row is fine: the send still goes
   // out, we just can't reconstruct the text the customer saw.
@@ -186,9 +197,7 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
       })
       return r.messageId
     }
-    const r = await sendTextMessage({
-      phoneNumberId: config.phone_number_id,
-      accessToken,
+    const r = await provider.sendText({
       to: phone,
       text: input.text,
     })

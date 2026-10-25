@@ -6,6 +6,7 @@ import {
   toErrorResponse,
 } from '@/lib/auth/account'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { supportsTemplates } from '@/lib/whatsapp/provider'
 import {
   deleteMessageTemplate,
   editMessageTemplate,
@@ -147,6 +148,12 @@ export async function PATCH(
           { status: 400 },
         )
       }
+      if (!supportsTemplates(config)) {
+        return NextResponse.json(
+          { error: t('common.providerNotSupported'), code: 'provider_not_supported' },
+          { status: 400 },
+        )
+      }
       const accessToken = decrypt(config.access_token)
 
       // Media headers (image/video/document) need a fresh Resumable-Upload
@@ -272,6 +279,12 @@ export async function DELETE(
       if (configError || !config || !config.waba_id) {
         return NextResponse.json(
           { error: t('templates.notConfiguredDelete') },
+          { status: 400 },
+        )
+      }
+      if (!supportsTemplates(config)) {
+        return NextResponse.json(
+          { error: t('common.providerNotSupported'), code: 'provider_not_supported' },
           { status: 400 },
         )
       }

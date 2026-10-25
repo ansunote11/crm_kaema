@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireRole, toErrorResponse } from '@/lib/auth/account';
-import { sendReactionMessage } from '@/lib/whatsapp/meta-api';
-import { decrypt } from '@/lib/whatsapp/encryption';
+import { resolveSendProvider } from '@/lib/whatsapp/provider';
 import { resolveContactSendTarget } from '@/lib/whatsapp/wa-identity';
 import {
   checkRateLimit,
@@ -54,7 +53,7 @@ export async function POST(request: Request) {
     // Resolve target message + its conversation; verify ownership.
     const { data: targetMessage, error: msgError } = await supabase
       .from('messages')
-      .select('id, message_id, conversation_id')
+      .select('id, message_id, conversation_id, sender_type')
       .eq('id', message_id)
       .maybeSingle();
 
@@ -101,7 +100,9 @@ export async function POST(request: Request) {
     // WhatsApp config + access token. Account-scoped post-multi-user.
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, access_token')
+      .select(
+        'provider, phone_number_id, access_token, evolution_server_url, evolution_instance, evolution_api_key',
+      )
       .eq('account_id', accountId)
       .single();
 
@@ -112,15 +113,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const accessToken = decrypt(config.access_token);
-
     try {
-      await sendReactionMessage({
-        phoneNumberId: config.phone_number_id,
-        accessToken,
+      await resolveSendProvider(config).sendReaction({
         to: sendTarget.target,
         targetMessageId: targetMessage.message_id,
         emoji,
+        // Evolution needs to know whose message is being reacted to.
+        targetFromMe: targetMessage.sender_type !== 'customer',
       });
     } catch (err) {
       const message =

@@ -21,14 +21,13 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { sendTemplateMessage, type MediaKind } from '@/lib/whatsapp/meta-api'
 import {
-  sendTextMessage,
-  sendTemplateMessage,
-  sendMediaMessage,
-  sendInteractiveButtons,
-  sendInteractiveList,
-  type MediaKind,
-} from '@/lib/whatsapp/meta-api';
+  configProvider,
+  resolveSendProvider,
+  supportsTemplates,
+  ProviderConfigError,
+} from '@/lib/whatsapp/provider';
 import {
   validateInteractivePayload,
   interactivePayloadPreviewText,
@@ -273,10 +272,32 @@ export async function sendMessageToConversation(
     );
   }
 
-  const accessToken = decrypt(config.access_token);
+  const providerKind = configProvider(config);
+
+  // Templates are Meta-only (no template concept on Baileys).
+  if (messageType === 'template' && !supportsTemplates(config)) {
+    throw new SendMessageError(
+      'provider_not_supported',
+      'Templates are not supported by the Evolution provider',
+      400
+    );
+  }
+
+  let provider: ReturnType<typeof resolveSendProvider>;
+  try {
+    provider = resolveSendProvider(config);
+  } catch (err) {
+    if (err instanceof ProviderConfigError) {
+      throw new SendMessageError('whatsapp_not_configured', err.message, 400);
+    }
+    throw err;
+  }
+  // Only the Meta path needs the raw token (template sends).
+  const accessToken =
+    providerKind === 'meta' ? decrypt(config.access_token) : '';
 
   // Self-heal legacy CBC ciphertexts. Fire-and-forget; idempotent.
-  if (isLegacyFormat(config.access_token)) {
+  if (providerKind === 'meta' && isLegacyFormat(config.access_token)) {
     void db
       .from('whatsapp_config')
       .update({ access_token: encrypt(accessToken) })
@@ -359,9 +380,7 @@ export async function sendMessageToConversation(
       return result.messageId;
     }
     if (isMediaKind) {
-      const result = await sendMediaMessage({
-        phoneNumberId: config.phone_number_id,
-        accessToken,
+      const result = await provider.sendMedia({
         to: phone,
         kind: messageType as MediaKind,
         link: mediaUrl!,
@@ -374,9 +393,7 @@ export async function sendMessageToConversation(
     if (messageType === 'interactive') {
       const p = interactivePayload!;
       if (p.kind === 'buttons') {
-        const result = await sendInteractiveButtons({
-          phoneNumberId: config.phone_number_id,
-          accessToken,
+        const result = await provider.sendInteractiveButtons({
           to: phone,
           bodyText: p.body,
           headerText: p.header || undefined,
@@ -386,9 +403,7 @@ export async function sendMessageToConversation(
         });
         return result.messageId;
       }
-      const result = await sendInteractiveList({
-        phoneNumberId: config.phone_number_id,
-        accessToken,
+      const result = await provider.sendInteractiveList({
         to: phone,
         bodyText: p.body,
         buttonLabel: p.button_label,
@@ -399,9 +414,7 @@ export async function sendMessageToConversation(
       });
       return result.messageId;
     }
-    const result = await sendTextMessage({
-      phoneNumberId: config.phone_number_id,
-      accessToken,
+    const result = await provider.sendText({
       to: phone,
       text: contentText!,
       contextMessageId,
@@ -441,9 +454,18 @@ export async function sendMessageToConversation(
     if (lastError) throw lastError;
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : 'Unknown Meta API error';
-    console.error('[send-message] Meta send failed for all variants:', message);
-    throw new SendMessageError('meta_error', `Meta API error: ${message}`, 502);
+      err instanceof Error ? err.message : 'Unknown provider API error';
+    console.error(
+      `[send-message] ${providerKind} send failed for all variants:`,
+      message
+    );
+    throw providerKind === 'meta'
+      ? new SendMessageError('meta_error', `Meta API error: ${message}`, 502)
+      : new SendMessageError(
+          'evolution_error',
+          `Evolution API error: ${message}`,
+          502
+        );
   }
 
   if (hasValidPhone && workingPhone !== sanitizedPhone) {
@@ -477,7 +499,7 @@ export async function sendMessageToConversation(
           )
         : (contentText ?? null);
 
-  const { data: messageRecord, error: msgError } = await db
+  let { data: messageRecord, error: msgError } = await db
     .from('messages')
     .insert({
       conversation_id: conversationId,
@@ -498,6 +520,32 @@ export async function sendMessageToConversation(
     })
     .select()
     .single();
+
+  // Evolution echoes every send back as a `fromMe` upsert that may land
+  // BEFORE this insert. The echo handler persists the row first; our insert
+  // then trips the (conversation_id, message_id) unique index. Adopt the
+  // echo's row instead of failing a message that was already delivered.
+  if (msgError?.code === '23505' && waMessageId) {
+    const { data: adopted } = await db
+      .from('messages')
+      .update({
+        sender_id: senderId ?? null,
+        content_type: messageType,
+        content_text: persistedText,
+        media_url: mediaUrl || null,
+        interactive_payload:
+          messageType === 'interactive' ? interactivePayload : null,
+        reply_to_message_id: replyToMessageId || null,
+      })
+      .eq('conversation_id', conversationId)
+      .eq('message_id', waMessageId)
+      .select()
+      .single();
+    if (adopted) {
+      messageRecord = adopted;
+      msgError = null;
+    }
+  }
 
   if (msgError) {
     console.error('[send-message] error inserting sent message:', msgError);

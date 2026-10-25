@@ -260,6 +260,8 @@ async function showTypingIndicator(
       messageId: inboundMessageId,
     })
   } catch (err) {
+    // Evolution has no typing-indicator equivalent — nothing to warn about.
+    if (err instanceof Error && err.name === 'NotMetaProviderError') return
     console.warn('[ai auto-reply] typing indicator failed (continuing):', err)
   }
 }

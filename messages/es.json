@@ -1950,7 +1950,30 @@
       "phoneNumberIdNotNumeric": "El Phone Number ID debe contener solo dígitos. Copia el id numérico desde Meta → WhatsApp → Configuración de la API, no el número de teléfono en sí.",
       "wabaIdNotNumeric": "El ID de la cuenta de WhatsApp Business debe contener solo dígitos. Cópialo desde Meta → WhatsApp → Configuración de la API.",
       "wabaSubscribed": "La cuenta de WhatsApp Business está suscrita a esta app: los webhooks entrantes pueden entregarse.",
-      "wabaNotSubscribed": "La cuenta de WhatsApp Business no está suscrita a esta app, así que Meta no entregará webhooks entrantes. Vuelve a ingresar el token de acceso y guarda de nuevo para suscribirla."
+      "wabaNotSubscribed": "La cuenta de WhatsApp Business no está suscrita a esta app, así que Meta no entregará webhooks entrantes. Vuelve a ingresar el token de acceso y guarda de nuevo para suscribirla.",
+      "providerLabel": "Proveedor de conexión",
+      "providerMeta": "Meta Cloud API",
+      "providerEvolution": "Evolution API (Baileys)",
+      "providerHint": "Cada cuenta usa un proveedor a la vez. Guardar el otro proveedor reemplaza las credenciales almacenadas.",
+      "evolutionTitle": "Evolution API",
+      "evolutionDesc": "Conecta una instancia propia de Evolution API. El webhook se registra automáticamente al guardar.",
+      "evolutionServerUrl": "URL del servidor",
+      "evolutionServerUrlPlaceholder": "https://tu-host-evolution",
+      "evolutionInstance": "Nombre de la instancia",
+      "evolutionInstancePlaceholder": "mi-instancia",
+      "evolutionApiKey": "Clave de la API",
+      "evolutionApiKeyPlaceholder": "Clave de Evolution API",
+      "evolutionApiKeySaved": "Ya hay una clave guardada. Déjalo en blanco para conservarla.",
+      "evolutionSave": "Guardar y registrar webhook",
+      "evolutionSaved": "Evolution guardada. Instancia conectada.",
+      "evolutionSavedNotOpen": "Guardado. La instancia aún no está conectada: escanea el código QR en el gestor de Evolution.",
+      "evolutionWebhookFailed": "Guardado, pero no se pudo registrar el webhook: {error}",
+      "evolutionRequired": "La URL del servidor, el nombre de la instancia y la clave de la API son obligatorios.",
+      "evolutionConnected": "Instancia conectada",
+      "evolutionNotConnected": "Instancia no conectada",
+      "evolutionWebhookOk": "Webhook registrado",
+      "evolutionWebhookMissing": "Webhook no registrado. Guarda de nuevo para repararlo.",
+      "evolutionCapabilities": "Las plantillas, las difusiones y la ventana de 24 horas no están disponibles con Evolution."
     },
     "sections": {
       "overview": "Resumen",
@@ -2553,7 +2576,8 @@
       "notConfigured": "WhatsApp no está configurado para esta cuenta",
       "dbInsertFailed": "enviado a Meta, pero falló el guardado en la base de datos: {message}",
       "conversationLookupFailed": "falló la búsqueda de la conversación: {message}",
-      "conversationNotFound": "conversación no encontrada en esta cuenta"
+      "conversationNotFound": "conversación no encontrada en esta cuenta",
+      "templatesNotSupported": "las plantillas no son compatibles con el proveedor Evolution"
     },
     "engine": {
       "needsContact": "{step} necesita un contacto",
@@ -2745,7 +2769,8 @@
       "unknownError": "Error desconocido",
       "invalidRequestBody": "Cuerpo de la solicitud no válido",
       "titleEmpty": "El título no puede estar vacío",
-      "insertFailed": "error al insertar"
+      "insertFailed": "error al insertar",
+      "providerNotSupported": "Esta función no es compatible con el proveedor Evolution."
     },
     "account": {
       "apiKeys": {

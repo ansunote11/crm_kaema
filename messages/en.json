@@ -1950,7 +1950,30 @@
       "phoneNumberIdNotNumeric": "Phone Number ID must contain only digits. Copy the numeric id from Meta → WhatsApp → API Setup, not the phone number itself.",
       "wabaIdNotNumeric": "WhatsApp Business Account ID must contain only digits. Copy it from Meta → WhatsApp → API Setup.",
       "wabaSubscribed": "The WhatsApp Business Account is subscribed to this app — inbound webhooks can be delivered.",
-      "wabaNotSubscribed": "The WhatsApp Business Account is not subscribed to this app, so Meta will not deliver inbound webhooks. Re-enter the access token and save again to subscribe it."
+      "wabaNotSubscribed": "The WhatsApp Business Account is not subscribed to this app, so Meta will not deliver inbound webhooks. Re-enter the access token and save again to subscribe it.",
+      "providerLabel": "Connection provider",
+      "providerMeta": "Meta Cloud API",
+      "providerEvolution": "Evolution API (Baileys)",
+      "providerHint": "Each account uses one provider at a time. Saving the other provider replaces the stored credentials.",
+      "evolutionTitle": "Evolution API",
+      "evolutionDesc": "Connect a self-hosted Evolution API instance. The webhook is registered automatically when you save.",
+      "evolutionServerUrl": "Server URL",
+      "evolutionServerUrlPlaceholder": "https://your-evolution-host",
+      "evolutionInstance": "Instance name",
+      "evolutionInstancePlaceholder": "my-instance",
+      "evolutionApiKey": "API key",
+      "evolutionApiKeyPlaceholder": "Evolution API key",
+      "evolutionApiKeySaved": "A key is saved. Leave blank to keep it.",
+      "evolutionSave": "Save and register webhook",
+      "evolutionSaved": "Evolution saved. Instance connected.",
+      "evolutionSavedNotOpen": "Saved. The instance is not connected yet: scan the QR code in the Evolution manager.",
+      "evolutionWebhookFailed": "Saved, but the webhook could not be registered: {error}",
+      "evolutionRequired": "Server URL, instance name and API key are required.",
+      "evolutionConnected": "Instance connected",
+      "evolutionNotConnected": "Instance not connected",
+      "evolutionWebhookOk": "Webhook registered",
+      "evolutionWebhookMissing": "Webhook not registered. Save again to repair it.",
+      "evolutionCapabilities": "Templates, broadcasts and the 24-hour window are not available with Evolution."
     },
     "sections": {
       "overview": "Overview",
@@ -2553,7 +2576,8 @@
       "notConfigured": "WhatsApp not configured for this account",
       "dbInsertFailed": "sent to Meta but DB insert failed: {message}",
       "conversationLookupFailed": "conversation lookup failed: {message}",
-      "conversationNotFound": "conversation not found for this account"
+      "conversationNotFound": "conversation not found for this account",
+      "templatesNotSupported": "templates are not supported by the Evolution provider"
     },
     "engine": {
       "needsContact": "{step} needs a contact",
@@ -2745,7 +2769,8 @@
       "unknownError": "Unknown error",
       "invalidRequestBody": "Invalid request body",
       "titleEmpty": "title cannot be empty",
-      "insertFailed": "insert failed"
+      "insertFailed": "insert failed",
+      "providerNotSupported": "This feature is not supported by the Evolution provider."
     },
     "account": {
       "apiKeys": {

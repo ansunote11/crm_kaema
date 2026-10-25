@@ -1,12 +1,12 @@
-import {
-  sendInteractiveButtons,
-  sendInteractiveList,
-  sendMediaMessage,
-  sendTextMessage,
-  type InteractiveButton,
-  type InteractiveListSection,
-  type MediaKind,
+import type {
+  InteractiveButton,
+  InteractiveListSection,
+  MediaKind,
 } from '@/lib/whatsapp/meta-api'
+import {
+  configProvider,
+  loadAccountSendProvider,
+} from '@/lib/whatsapp/provider'
 import type { InteractiveMessagePayload } from '@/lib/whatsapp/interactive'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import {
@@ -35,6 +35,14 @@ const t = getT('LibErrors')
 // keeps the foundation PR self-contained and unit-testable.
 // ------------------------------------------------------------
 
+/** Thrown by Meta-only helpers when the account uses another provider. */
+export class NotMetaProviderError extends Error {
+  constructor() {
+    super('This account does not use the Meta provider')
+    this.name = 'NotMetaProviderError'
+  }
+}
+
 /**
  * Resolve the account's Meta sending credentials: the phone number id
  * plus the DECRYPTED access token from `whatsapp_config`. The single
@@ -47,11 +55,14 @@ export async function loadAccountMetaCredentials(
 ): Promise<{ phoneNumberId: string; accessToken: string }> {
   const { data: config, error: configErr } = await db
     .from('whatsapp_config')
-    .select('phone_number_id, access_token')
+    .select('provider, phone_number_id, access_token')
     .eq('account_id', accountId)
     .single()
   if (configErr || !config) {
     throw new Error(t('send.notConfigured'))
+  }
+  if (configProvider(config) !== 'meta') {
+    throw new NotMetaProviderError()
   }
   return {
     phoneNumberId: config.phone_number_id,
@@ -118,15 +129,14 @@ export async function engineSendText(
   }
   const sanitized = sendTarget.target
 
-  const { phoneNumberId, accessToken } = await loadAccountMetaCredentials(
+  const provider = await loadAccountSendProvider(
     db,
     args.accountId,
+    t('send.notConfigured'),
   )
 
   const attempt = async (phone: string): Promise<string> => {
-    const r = await sendTextMessage({
-      phoneNumberId,
-      accessToken,
+    const r = await provider.sendText({
       to: phone,
       text: args.text,
     })
@@ -232,15 +242,14 @@ export async function engineSendMedia(
   }
   const sanitized = sendTarget.target
 
-  const { phoneNumberId, accessToken } = await loadAccountMetaCredentials(
+  const provider = await loadAccountSendProvider(
     db,
     args.accountId,
+    t('send.notConfigured'),
   )
 
   const attempt = async (phone: string): Promise<string> => {
-    const r = await sendMediaMessage({
-      phoneNumberId,
-      accessToken,
+    const r = await provider.sendMedia({
       to: phone,
       kind: args.kind,
       link: args.link,
@@ -388,16 +397,15 @@ async function sendInteractiveViaMeta(
   }
   const sanitized = sendTarget.target
 
-  const { phoneNumberId, accessToken } = await loadAccountMetaCredentials(
+  const provider = await loadAccountSendProvider(
     db,
     input.accountId,
+    t('send.notConfigured'),
   )
 
   const attempt = async (phone: string): Promise<string> => {
     if (input.kind === 'buttons') {
-      const r = await sendInteractiveButtons({
-        phoneNumberId,
-        accessToken,
+      const r = await provider.sendInteractiveButtons({
         to: phone,
         bodyText: input.bodyText,
         buttons: input.buttons,
@@ -406,9 +414,7 @@ async function sendInteractiveViaMeta(
       })
       return r.messageId
     }
-    const r = await sendInteractiveList({
-      phoneNumberId,
-      accessToken,
+    const r = await provider.sendInteractiveList({
       to: phone,
       bodyText: input.bodyText,
       buttonLabel: input.buttonLabel,

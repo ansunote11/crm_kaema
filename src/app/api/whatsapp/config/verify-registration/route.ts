@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { configProvider } from '@/lib/whatsapp/provider'
 import {
   getSubscribedApps,
   verifyPhoneNumber,
@@ -73,6 +74,15 @@ export async function GET() {
       live: false,
       checks: { config_exists: false },
       message: t('whatsappConfig.noConfigShort'),
+    })
+  }
+
+  // Meta-only diagnostic (phone registration + WABA subscription).
+  if (configProvider(config) === 'evolution') {
+    return NextResponse.json({
+      live: config.status === 'connected',
+      checks: { config_exists: true },
+      message: t('common.providerNotSupported'),
     })
   }
 

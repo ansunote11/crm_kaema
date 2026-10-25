@@ -6,6 +6,7 @@ import {
   toErrorResponse,
 } from '@/lib/auth/account'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { supportsTemplates } from '@/lib/whatsapp/provider'
 import { normalizeStatus } from '@/lib/whatsapp/template-status-normalize'
 import type { TemplateButton, TemplateSampleValues } from '@/types'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
@@ -168,6 +169,12 @@ export async function POST() {
       )
     }
 
+    if (!supportsTemplates(config)) {
+      return NextResponse.json(
+        { error: t('common.providerNotSupported'), code: 'provider_not_supported' },
+        { status: 400 },
+      )
+    }
     const accessToken = decrypt(config.access_token)
 
     const metaTemplates: MetaTemplate[] = []

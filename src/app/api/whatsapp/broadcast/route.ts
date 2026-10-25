@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { sendTemplateMessage } from '@/lib/whatsapp/meta-api'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { supportsBroadcasts } from '@/lib/whatsapp/provider'
 import type { SendTimeParams } from '@/lib/whatsapp/template-send-builder'
 import { resolveTemplateRow } from '@/lib/whatsapp/template-body'
 import {
@@ -135,6 +136,14 @@ export async function POST(request: Request) {
           error:
             t('common.whatsappNotConfiguredSetup'),
         },
+        { status: 400 }
+      )
+    }
+
+    // Broadcasts are template sends — Meta-only.
+    if (!supportsBroadcasts(config)) {
+      return NextResponse.json(
+        { error: t('common.providerNotSupported'), code: 'provider_not_supported' },
         { status: 400 }
       )
     }

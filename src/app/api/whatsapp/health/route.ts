@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCurrentAccount, toErrorResponse } from '@/lib/auth/account'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { configProvider } from '@/lib/whatsapp/provider'
 import { getPhoneNumberHealth } from '@/lib/whatsapp/meta-api'
 import {
   parseMessagingLimit,
@@ -30,9 +31,20 @@ export async function GET() {
 
     const { data: config } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, access_token, status')
+      .select('provider, phone_number_id, access_token, status, evolution_instance')
       .eq('account_id', accountId)
       .maybeSingle()
+
+    // Evolution has no quality rating / messaging limit — report the
+    // instance link state only.
+    if (config && configProvider(config) === 'evolution') {
+      return reply({
+        state: config.status === 'connected' ? 'connected' : 'disconnected',
+        ...EMPTY,
+        displayPhoneNumber:
+          config.status === 'connected' ? (config.evolution_instance ?? null) : null,
+      })
+    }
 
     if (!config || config.status !== 'connected' || !config.phone_number_id) {
       return reply({ state: 'disconnected', ...EMPTY })
